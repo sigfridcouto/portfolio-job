@@ -1,0 +1,76 @@
+---
+import { pathFor, site, t, type Locale, type Page } from '../i18n';
+
+interface Props {
+  lang: Locale;
+  page: Page;
+}
+
+const { lang, page } = Astro.props;
+const { nav, a11y } = t(lang);
+const year = new Date().getFullYear();
+const home = pathFor(lang, 'home');
+const contactHref = page === 'error' ? `${home}#contact` : '#contact';
+---
+
+<footer class="site-footer">
+  <div class="container inner">
+    <a class="logo" href={home} aria-label={`sig, ${a11y.homeLink}`}>sig<span aria-hidden="true"></span></a>
+    <nav aria-label={a11y.footerNav}>
+      <a href={home}>{nav.home}</a>
+      <a href={pathFor(lang, 'about')}>{nav.about}</a>
+      <a href={contactHref}>{nav.contact}</a>
+    </nav>
+    <p>&copy; {year} {site.name}</p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--border);
+    padding-block: 32px;
+    color: var(--text-3);
+    font-size: 0.875rem;
+  }
+
+  .inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px 32px;
+  }
+
+  .logo {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 2px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.25rem;
+    letter-spacing: -0.04em;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .logo span {
+    width: 6px;
+    height: 6px;
+    margin-bottom: 3px;
+    border-radius: 1.5px;
+    background: var(--accent);
+  }
+
+  nav {
+    display: flex;
+    gap: 24px;
+  }
+
+  nav a {
+    transition: color var(--dur) var(--ease);
+  }
+
+  nav a:hover {
+    color: var(--text);
+  }
+</style>

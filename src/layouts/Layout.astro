@@ -1,0 +1,162 @@
+---
+import '../styles/global.css';
+import interLatin from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
+import groteskLatin from '@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2?url';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { locales, ogLocales, pathFor, site, t, type Locale, type Page } from '../i18n';
+
+interface Props {
+  lang: Locale;
+  page: Page;
+  title: string;
+  description: string;
+}
+
+const { lang, page, title, description } = Astro.props;
+const dict = t(lang);
+const siteUrl = Astro.site ?? new URL('https://sigfridcouto.com');
+const indexable = page !== 'error';
+const canonical = new URL(pathFor(lang, page), siteUrl).href;
+const homeUrl = new URL('/', siteUrl).href;
+const ogImage = new URL('/og.jpg', siteUrl).href;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Person',
+      '@id': `${siteUrl.origin}/#person`,
+      name: site.name,
+      url: homeUrl,
+      image: ogImage,
+      jobTitle: dict.meta.jobTitle,
+      description: dict.meta.homeDescription,
+      knowsAbout: ['C#', '.NET', 'ASP.NET Core', 'Angular', 'TypeScript', 'Enterprise Architecture', 'Legacy Modernisation', 'System Integration', 'SQL Server', 'Entity Framework', 'RESTful API Design'],
+      knowsLanguage: ['es', 'ca', 'de', 'en', 'fr'],
+      address: { '@type': 'PostalAddress', addressCountry: 'FR' },
+      sameAs: [site.linkedin],
+    },
+    {
+      '@type': 'ProfessionalService',
+      '@id': `${siteUrl.origin}/#service`,
+      name: `${site.name}, ${dict.meta.jobTitle}`,
+      url: homeUrl,
+      founder: { '@id': `${siteUrl.origin}/#person` },
+      areaServed: ['FR', 'DE', 'ES', 'EU'],
+      availableLanguage: ['English', 'French', 'German', 'Spanish', 'Catalan'],
+    },
+  ],
+};
+---
+
+<!doctype html>
+<html lang={lang} data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="preload" href={groteskLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={interLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="theme-color" content="#070b16" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f7f9fc" media="(prefers-color-scheme: light)" />
+
+    {
+      indexable ? (
+        <>
+          <link rel="canonical" href={canonical} />
+          {locales.map((l) => (
+            <link rel="alternate" hreflang={l} href={new URL(pathFor(l, page), siteUrl).href} />
+          ))}
+          <link rel="alternate" hreflang="x-default" href={new URL(pathFor('en', page), siteUrl).href} />
+
+          <meta property="og:type" content="profile" />
+          <meta property="og:site_name" content={site.name} />
+          <meta property="og:title" content={title} />
+          <meta property="og:description" content={description} />
+          <meta property="og:url" content={canonical} />
+          <meta property="og:image" content={ogImage} />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="630" />
+          <meta property="og:image:alt" content={`${site.name}, ${dict.meta.jobTitle}`} />
+          <meta property="og:locale" content={ogLocales[lang]} />
+          {locales
+            .filter((l) => l !== lang)
+            .map((l) => (
+              <meta property="og:locale:alternate" content={ogLocales[l]} />
+            ))}
+          <meta name="twitter:card" content="summary_large_image" />
+
+          <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+        </>
+      ) : (
+        <meta name="robots" content="noindex" />
+      )
+    }
+
+    <!-- Apply theme before first paint to avoid a flash -->
+    <script is:inline>
+      (function () {
+        var root = document.documentElement;
+        root.classList.add('js');
+        var stored = null;
+        try { stored = localStorage.getItem('theme'); } catch (_) {}
+        var theme = stored === 'light' || stored === 'dark'
+          ? stored
+          : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        root.setAttribute('data-theme', theme);
+      })();
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">{dict.nav.skip}</a>
+    <Header lang={lang} page={page} />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer lang={lang} page={page} />
+
+    <script>
+      // Reveal elements as they enter the viewport
+      const targets = document.querySelectorAll<HTMLElement>('[data-reveal]');
+      if (!('IntersectionObserver' in window)) {
+        targets.forEach((el) => el.classList.add('revealed'));
+      } else {
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('revealed');
+                io.unobserve(entry.target);
+              }
+            }
+          },
+          { threshold: 0.08, rootMargin: '0px 0px -40px 0px' },
+        );
+        targets.forEach((el) => io.observe(el));
+      }
+
+      // Pointer-following spotlight on cards (only for devices that can hover)
+      if (window.matchMedia('(hover: hover)').matches) {
+        document.querySelectorAll<HTMLElement>('.spotlight').forEach((el) => {
+          let frame = 0;
+          let x = 0;
+          let y = 0;
+          el.addEventListener('pointermove', (e) => {
+            x = e.clientX;
+            y = e.clientY;
+            if (frame) return;
+            frame = requestAnimationFrame(() => {
+              frame = 0;
+              const r = el.getBoundingClientRect();
+              el.style.setProperty('--mx', `${x - r.left}px`);
+              el.style.setProperty('--my', `${y - r.top}px`);
+            });
+          });
+        });
+      }
+    </script>
+  </body>
+</html>

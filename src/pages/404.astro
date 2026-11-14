@@ -1,0 +1,23 @@
+---
+// Served by the host for any unknown URL. Rendered in English; if the missing URL
+// (or the browser) points to another supported language, switch to that language's 404.
+import NotFound from '../components/NotFound.astro';
+import { defaultLocale, locales } from '../i18n';
+---
+
+<NotFound lang={defaultLocale}>
+  <script is:inline define:vars={{ supported: locales, fallback: defaultLocale }}>
+    (function () {
+      var first = location.pathname.split('/')[1];
+      var target = supported.indexOf(first) !== -1 ? first : null;
+      if (!target) {
+        var prefs = navigator.languages || [navigator.language || fallback];
+        for (var i = 0; i < prefs.length; i++) {
+          var code = String(prefs[i]).toLowerCase().split('-')[0];
+          if (supported.indexOf(code) !== -1) { target = code; break; }
+        }
+      }
+      if (target && target !== fallback) location.replace('/' + target + '/404/');
+    })();
+  </script>
+</NotFound>

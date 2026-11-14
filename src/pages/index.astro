@@ -1,0 +1,32 @@
+---
+// Root: send visitors to their preferred language (falls back to the default locale).
+// Note: a server-side redirect on `Accept-Language` at the host is faster and SEO-friendlier;
+// this page is the static fallback.
+import { defaultLocale, locales } from '../i18n';
+---
+
+<!doctype html>
+<html lang={defaultLocale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sigfrid Couto Fernández</title>
+    <meta name="robots" content="noindex, follow" />
+    <link rel="canonical" href={new URL(`/${defaultLocale}/`, Astro.site).href} />
+    <script is:inline define:vars={{ supported: locales, fallback: defaultLocale }}>
+      (function () {
+        var prefs = navigator.languages || [navigator.language || fallback];
+        var target = fallback;
+        for (var i = 0; i < prefs.length; i++) {
+          var code = String(prefs[i]).toLowerCase().split('-')[0];
+          if (supported.indexOf(code) !== -1) { target = code; break; }
+        }
+        window.location.replace('/' + target + '/');
+      })();
+    </script>
+    <noscript><meta http-equiv="refresh" content={`0; url=/${defaultLocale}/`} /></noscript>
+  </head>
+  <body style="background:#070b16">
+    <noscript><a href={`/${defaultLocale}/`} style="color:#e8eef7">Continue</a></noscript>
+  </body>
+</html>

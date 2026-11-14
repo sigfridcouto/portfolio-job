@@ -1,0 +1,50 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { pathFor, site, t, type Locale } from '../i18n';
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const { notFound } = t(lang);
+---
+
+<Layout lang={lang} page="error" title={`404 | ${site.name}`} description={notFound.text}>
+  <section class="nf">
+    <div class="bg-grid" aria-hidden="true"></div>
+    <div class="container">
+      <p class="code gradient-text" aria-hidden="true">404</p>
+      <h1>{notFound.title}</h1>
+      <p class="txt">{notFound.text}</p>
+      <a class="btn btn-primary" href={pathFor(lang, 'home')}>{notFound.back}</a>
+    </div>
+  </section>
+  <slot />
+</Layout>
+
+<style>
+  .nf {
+    position: relative;
+    isolation: isolate;
+    min-height: 70vh;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding-block: 96px;
+  }
+  .code {
+    font-family: var(--font-display);
+    font-size: clamp(6rem, 20vw, 12rem);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.06em;
+  }
+  h1 {
+    font-size: 2rem;
+  }
+  .txt {
+    margin: 12px 0 32px;
+    color: var(--text-2);
+  }
+</style>
